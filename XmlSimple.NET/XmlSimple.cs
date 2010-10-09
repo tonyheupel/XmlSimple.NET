@@ -114,11 +114,18 @@ namespace XmlSimple
                 //  but since we can't assume that the Books element
                 //  is ONLY an array object, we need to stick with it
                 //  this way for now. (This is how XMLSimple does it).
-                if (elementObject.ContainsKey(name))
+                bool force = ShouldForceArray(options.ForceArray, name);
+                bool alreadyHasName = elementObject.ContainsKey(name);
+
+                if (force || alreadyHasName)
                 {
-                    if (!(elementObject[name] is IEnumerable<object>))
+                    if (!alreadyHasName)
                     {
-                        List<object> value = new List<object>();
+                        elementObject[name] = new List<object>();
+                    }
+                    else if (alreadyHasName && !(elementObject[name] is IEnumerable<object>))
+                    {
+                        var value = new List<object>();
                         value.Add(elementObject[name]);
                         elementObject[name] = value;
                     }
@@ -132,6 +139,13 @@ namespace XmlSimple
             }
         }
 
+
+        protected static bool ShouldForceArray(object forceArray, string name)
+        {
+            if (forceArray is Boolean) return (bool)forceArray;
+
+            return (forceArray is IEnumerable<string> && (forceArray as IEnumerable<string>).Contains(name));
+        }
 
         #region Member Name Formatting
         protected static readonly string AttributePrefix = "@";

@@ -71,6 +71,20 @@ namespace XmlSimple.NET.UnitTest
             }
         }
 
+        [TestMethod]
+        public void XmlInWithStringOfXmlAndForceArrayOptionSetToTrue()
+        {
+            dynamic library = XmlSimple.XmlIn(this.libraryXmlString, new Options { ForceArray = true });
+
+            Assert.IsNotNull(library.Address as IEnumerable<object>);
+            Assert.IsNotNull(library.Address[0].Street as IEnumerable<object>);
+            Assert.IsNotNull(library.Books as IEnumerable<object>);
+            Assert.AreEqual("27100 164th Ave. S.E.", library.Address[0].Street[0]);
+            Assert.AreSame(library["Books"][0]["Book"][1], library.Books[0].Book[1]);
+            Assert.IsInstanceOfType(library.Books[0].Book[0], typeof(XmlSimple));
+        }
+
+
         [Ignore]
         [TestMethod]
         public void TryXmlSimpleWithYahoo()
