@@ -1,5 +1,6 @@
-XmlSimple.NET - .NET implementation of XmlSimple
-(Ruby Gem xml-simple and Perl XML::Simple)
+XmlSimple.NET - C# 4 dynamic implementation of XmlSimple
+(Ruby Gem XmlSimple (xml-simple), Perl's XML::Simple, or PHP's SimpleXML)
+
 Projects initiated by Tony Heupel (pronounced "High-pull")
 ===========================
 Copyright 2010 (C) Tony Heupel
@@ -26,7 +27,13 @@ Contents:
       Assert.AreEqual("Soon Will Come the Light", library.Books.Book[0].Title);
 
 
-    Takes dependencies: TonyHeupel.HyperCore (http://github.com/tonyheupel/hypercore), , Microsoft.CSharp, System.Linq, System.Xml.Linq, System.XML, System.Core 
+    Takes dependencies: 
+      * TonyHeupel.HyperCore (http://github.com/tonyheupel/hypercore)
+      * Microsoft.CSharp
+      * System.Linq
+      * System.Xml.Linq
+      * System.XML
+      * System.Core 
 
   XmlSimple.NET.UnitTest:  
     Tests to ensure the library is working as expected.
