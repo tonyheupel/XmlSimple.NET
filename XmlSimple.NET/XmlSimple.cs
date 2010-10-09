@@ -15,19 +15,13 @@ namespace XmlSimple
     /// </summary>
     public class XmlSimple : HyperDynamo
     {
-        public enum Options
-        {
-            AttrPrefix,
-            NoAttr
-        }
-
         #region Public static members
         public static dynamic XmlIn(string input)
         {
             return XmlIn(input, null);
         }
 
-        public static dynamic XmlIn(string input, IDictionary<Options, object> options)
+        public static dynamic XmlIn(string input, Options options)
         {
             if (String.IsNullOrWhiteSpace(input)) throw new ArgumentException("Empty and null strings are not allowed (this isn't Ruby's XmlSimple)");
 
@@ -42,7 +36,7 @@ namespace XmlSimple
         }
 
 
-        public static dynamic XmlIn(System.IO.Stream stream, IDictionary<Options, object> options)
+        public static dynamic XmlIn(System.IO.Stream stream, Options options)
         {
             if (stream == null || stream.Length <= 0) throw new ArgumentException("Must pass an non-empty stream");
 
@@ -56,11 +50,11 @@ namespace XmlSimple
         }
 
 
-        public static dynamic XmlIn(XDocument document, IDictionary<Options, object> options)
+        public static dynamic XmlIn(XDocument document, Options options)
         {
             if (document == null || document.Root == null) throw new ArgumentException("Must pass a non-empty XDocument");
 
-            options = MergeOptionsWithDefaults(options);
+            if (options == null) options = new Options();
 
             return ParseElement(document.Root, options);
         }
@@ -68,24 +62,22 @@ namespace XmlSimple
 
 
         #region Protected static members
-
-
-
         protected static bool IsXmlString(string input)
         {
+            // Implementation taken from Ruby's XmlSimple's documented rules
             return (input.Contains('<') && input.Contains('>'));
         }
 
 
-        protected static dynamic ParseElement(XElement element, IDictionary<Options, object> options)
+        protected static dynamic ParseElement(XElement element, Options options)
         {
             if (element.HasAttributes || element.HasElements)
             {
                 dynamic current = new XmlSimple();
 
-                if (!(bool)options[Options.NoAttr])
+                if (!options.NoAttr)
                 {
-                    ParseAttributes(element, ref current, (bool)options[Options.AttrPrefix]);
+                    ParseAttributes(element, ref current, options.AttrPrefix);
                 }
 
                 ParseElements(element, ref current, options);
@@ -108,7 +100,7 @@ namespace XmlSimple
         }
 
 
-        protected static void ParseElements(XElement element, ref dynamic elementObject, IDictionary<Options, object> options)
+        protected static void ParseElements(XElement element, ref dynamic elementObject, Options options)
         {
             foreach (XElement current in element.Elements())
             {
@@ -140,28 +132,6 @@ namespace XmlSimple
             }
         }
 
-        protected static IDictionary<Options, object> MergeOptionsWithDefaults(IDictionary<Options, object> options)
-        {
-            var mergedOptions = GetDefaultOptions();
-
-            if (options == null) return mergedOptions;
-
-            foreach (Options key in options.Keys)
-            {
-                mergedOptions[key] = options[key];
-            }
-
-            return mergedOptions;
-        }
-
-
-        protected static Dictionary<Options, object> GetDefaultOptions()
-        {
-            var defaults = new Dictionary<Options, object>();
-            defaults[Options.AttrPrefix] = false;
-            defaults[Options.NoAttr] = false;
-            return defaults;
-        }
 
         #region Member Name Formatting
         protected static readonly string AttributePrefix = "@";
@@ -210,7 +180,7 @@ namespace XmlSimple
             get
             {
                 dynamic result;
-                if (TryGetName(name, out result)) return result;
+                if (GetNameHeuristic(name, out result)) return result;
 
                 return base[name];
             }

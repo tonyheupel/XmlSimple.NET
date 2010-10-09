@@ -8,22 +8,67 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace XmlSimple.NET.UnitTest
 {
     /// <summary>
-    /// Summary description for UnitTest1
+    /// Unit Tests for XmlSimple class
     /// </summary>
     [TestClass]
     public class XmlSimpleTest
     {
+        private string libraryXmlString = @"<Library Name=""Covington""><Address><Street>27100 164th Ave. S.E.</Street><City>Covington</City><State>WA</State><Zip>98042</Zip></Address><Books><Book Title=""Soon Will Come the Light"" Author=""Tom McKean""></Book><Book Title=""Fall of Giants"" Author=""Ken Follett"" /></Books></Library>";
+        
         [TestMethod]
-        public void TryXmlSimple()
+        public void XmlInWithStringOfXmlAndDefaultOptions()
         {
-            string xml = @"<Library Name=""Covington""><Books><Book Title=""Soon Will Come the Light"" Author=""Tom McKean""></Book><Book Title=""Fall of Giants"" Author=""Ken Follett"" /></Books></Library>";
-
-            dynamic library = XmlSimple.XmlIn(xml);
+            dynamic library = XmlSimple.XmlIn(this.libraryXmlString);
 
             Assert.IsInstanceOfType(library, typeof(XmlSimple));
+            Assert.AreEqual("Covington", library["name"]);
+            Assert.IsFalse(library.ContainsKey("@name")); // Ensure attributes don't have prefix
+            Assert.AreEqual("Covington", library.Name);
+            Assert.AreEqual("Covington", library.nAMe);   // Support mixed-case
+            Assert.AreEqual("27100 164th Ave. S.E.", library.Address.Street);
             Assert.IsTrue(library.ContainsKey("Books"));
             Assert.AreSame(library["Books"]["Book"][1], library.Books.Book[1]);
             Assert.AreEqual("Soon Will Come the Light", library.Books.Book[0].Title);
+        }
+
+        [TestMethod]
+        public void XmlInWithStringOfXmlAndAttrPrefixOptionSetToTrue()
+        {
+            dynamic library = XmlSimple.XmlIn(this.libraryXmlString, new Options { AttrPrefix = true });
+
+            Assert.IsInstanceOfType(library, typeof(XmlSimple));
+            Assert.AreEqual("Covington", library["@name"]); // Ensure attribute has prefix
+            Assert.AreEqual("Covington", library["name"]);  // Support missing prefix even though attributes have them
+            Assert.AreEqual("Covington", library.Name);
+            Assert.AreEqual("Covington", library.nAMe);
+            Assert.AreEqual("27100 164th Ave. S.E.", library.Address.Street);
+            Assert.IsTrue(library.ContainsKey("Books"));
+            Assert.AreSame(library["Books"]["Book"][1], library.Books.Book[1]);
+            Assert.AreEqual("Soon Will Come the Light", library.Books.Book[0].Title);
+            Assert.AreEqual("Soon Will Come the Light", library.Books.Book[0]["@tiTle"]);
+        }
+
+        [TestMethod]
+        public void XmlInWithStringOfXmlAndNoAttrOptionSetToTrue()
+        {
+            dynamic library = XmlSimple.XmlIn(this.libraryXmlString, new Options { NoAttr = true });
+
+            Assert.IsInstanceOfType(library, typeof(XmlSimple));
+            Assert.IsFalse(library.ContainsKey("Name"));
+            Assert.AreEqual("27100 164th Ave. S.E.", library.Address.Street);
+            Assert.IsTrue(library.ContainsKey("Books"));
+            Assert.AreSame(library["Books"]["Book"][1], library.Books.Book[1]);
+            
+            Assert.IsInstanceOfType(library.Books.Book[0], typeof(XmlSimple));
+            try
+            {
+                string title = library.Books.Book[0].Title;
+                Assert.Fail("This should have thrown a RuntimeBinderException since we didn't parse attributes");
+            }
+            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
+            {
+                // Pass
+            }
         }
 
         [Ignore]
@@ -56,9 +101,7 @@ namespace XmlSimple.NET.UnitTest
 
             dynamic data = XmlSimple.XmlIn(url);
 
-            Dictionary<XmlSimple.Options, object> options = new Dictionary<XmlSimple.Options, object>();
-            options[XmlSimple.Options.AttrPrefix] = true;
-            dynamic dataAttrPrefix = XmlSimple.XmlIn(url, options);
+            dynamic dataAttrPrefix = XmlSimple.XmlIn(url, new Options() { AttrPrefix = true });
 
             // The next two lines are equivalent - notice the use of mixed case
             data.Result.ForEach(new Action<dynamic>(result => Console.WriteLine("{0} => {1}", result.Title, result.URl)));
