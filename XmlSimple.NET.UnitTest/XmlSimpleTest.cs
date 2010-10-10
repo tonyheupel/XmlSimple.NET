@@ -48,6 +48,7 @@ namespace XmlSimple.NET.UnitTest
             Assert.AreEqual("Soon Will Come the Light", library.Books.Book[0]["@tiTle"]);
         }
 
+        [ExpectedException(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException))]
         [TestMethod]
         public void XmlInWithStringOfXmlAndNoAttrOptionSetToTrue()
         {
@@ -60,15 +61,9 @@ namespace XmlSimple.NET.UnitTest
             Assert.AreSame(library["Books"]["Book"][1], library.Books.Book[1]);
             
             Assert.IsInstanceOfType(library.Books.Book[0], typeof(XmlSimple));
-            try
-            {
-                string title = library.Books.Book[0].Title;
-                Assert.Fail("This should have thrown a RuntimeBinderException since we didn't parse attributes");
-            }
-            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
-            {
-                // Pass
-            }
+ 
+            // The next one should trigger the ExpectedExceptionAttribute of this test method
+            string title = library.Books.Book[0].Title;
         }
 
         [TestMethod]
