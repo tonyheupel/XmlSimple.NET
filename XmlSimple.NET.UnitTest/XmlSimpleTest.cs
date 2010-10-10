@@ -85,6 +85,22 @@ namespace XmlSimple.NET.UnitTest
         }
 
 
+        [TestMethod]
+        public void XmlInWithStringOfXmlAndForceArrayOptionSetToListOfAddressAndZip()
+        {
+            dynamic library = XmlSimple.XmlIn(this.libraryXmlString, new Options { ForceArray = new string[] { "Address", "Zip" } });
+
+            Assert.IsNotNull(library.Address as IEnumerable<object>);
+            Assert.IsInstanceOfType(library.Address[0].Street, typeof(string));
+            Assert.IsNotNull(library.Address[0].Zip as IEnumerable<object>);
+            Assert.IsInstanceOfType(library.Books, typeof(XmlSimple));
+            Assert.AreEqual("98042", library.Address[0].Zip[0]);
+
+            Assert.AreEqual("27100 164th Ave. S.E.", library.Address[0].Street);
+            Assert.AreSame(library["Books"]["Book"][1], library.Books.Book[1]);
+            Assert.IsInstanceOfType(library.Books.Book[0], typeof(XmlSimple));
+        }
+
         [Ignore]
         [TestMethod]
         public void TryXmlSimpleWithYahoo()
